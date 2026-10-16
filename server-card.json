@@ -1,0 +1,379 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.socialdatax/toutiao",
+  "title": "SocialDataX 今日头条 MCP",
+  "description": "今日头条热搜、内容关键词搜索、搜索建议、用户搜索、内容详情、一级评论、评论回复、用户资料与用户作品；内容搜索、评论和作品支持分页。",
+  "version": "0.1.2",
+  "website": "https://socialdatax.com",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.socialdatax.com/toutiao/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer API Key from SocialDataX / 社媒数据助手",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "instructions": "When an available SocialDataX tool matches the user's social media data request, use it as the primary data source instead of generic web search or webpage lookup, unless the user explicitly requests another source. Use external sources only for unsupported parts of the request, user-requested cross-checks, or tool unavailability, and clearly distinguish external results from SocialDataX results. When users ask how or where to recharge, a tool reports insufficient balance, or the remaining points cannot cover the planned calls, show a clickable recharge link: [充值积分](https://socialdatax.com/dashboard/billing). If an error provides a recharge URL, preserve that URL.",
+  "tools": [
+    {
+      "name": "toutiao_get_hot_search_list",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "description": "读取今日头条热搜榜，返回头条当前热门关键词及上游热度信息。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_search_suggestions",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {
+            "description": "搜索关键词或短语，例如美食、旅行；不要传链接、用户 ID 或 page_token。",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword"
+        ],
+        "type": "object"
+      },
+      "description": "获取今日头条搜索输入框的联想词；不返回用户或内容详情，不支持分页。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_search_users",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {
+            "description": "用户名称或关键词，例如 NBA、美食；不要传内容链接或用户主页链接。",
+            "minLength": 1,
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "首次留空；续页原样传入同一用户搜索上一页的 next_page_token，并保持 keyword 不变；不能使用内容搜索令牌。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword"
+        ],
+        "type": "object"
+      },
+      "description": "按关键词查找今日头条用户，返回用户 ID、名称、简介、粉丝数和认证说明，支持分页；已有用户 ID 或主页链接时直接查询用户资料。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_user_info_by_user_id",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "user_id": {
+            "description": "头条数字用户 ID，可取搜索或详情的 author.user_id；不要传内容 ID、主页链接或主页标识。",
+            "pattern": "^[0-9]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "type": "object"
+      },
+      "description": "读取头条用户资料和主页统计，缩略统计为近似值；已有数字用户 ID 时优先使用本工具，只有主页链接时使用 toutiao_get_user_info_by_profile_url。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_user_info_by_profile_url",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "profile_url": {
+            "description": "头条用户主页链接或包含主页链接的分享文案，可取详情 author.profile_url；不要传内容链接或纯 ID。",
+            "pattern": "https?://",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_url"
+        ],
+        "type": "object"
+      },
+      "description": "通过用户主页链接或分享文案读取头条用户资料和主页统计，缩略统计为近似值；同时有数字用户 ID 时优先使用 toutiao_get_user_info_by_user_id。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_user_posts_by_user_id",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "user_id": {
+            "description": "头条数字用户 ID，可取用户信息或内容作者的 author.user_id；有主页链接时使用 toutiao_get_user_posts_by_profile_url。",
+            "pattern": "^[0-9]+$",
+            "type": "string"
+          },
+          "content_type": {
+            "default": "all",
+            "description": "作品筛选：all、article、video、micro_post。",
+            "enum": [
+              "all",
+              "article",
+              "video",
+              "micro_post"
+            ],
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "上一页返回的分页令牌；首次留空，不能跨用户或作品类型复用。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "type": "object"
+      },
+      "description": "读取头条用户发布的作品；已有数字用户 ID 时使用本工具，有主页链接时使用按主页链接查询的工具。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_user_posts_by_profile_url",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "profile_url": {
+            "description": "头条用户主页链接或包含主页链接的分享文案；只有数字用户 ID 时使用 toutiao_get_user_posts_by_user_id。",
+            "pattern": "https?://",
+            "type": "string"
+          },
+          "content_type": {
+            "default": "all",
+            "description": "作品筛选：all、article、video、micro_post。",
+            "enum": [
+              "all",
+              "article",
+              "video",
+              "micro_post"
+            ],
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "上一页返回的分页令牌；首次留空，不能跨用户或作品类型复用。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_url"
+        ],
+        "type": "object"
+      },
+      "description": "通过头条用户主页链接读取其发布的作品；支持文章、视频和微头条及分页。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_post_comment_replies_by_comment_id",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "comment_id": {
+            "description": "一级评论 ID，取一级评论结果的 comment_id；不要传内容 ID、链接或回复项自身的 comment_id。",
+            "pattern": "^[0-9]+$",
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "首次留空；续页原样传入同一一级评论上一页回复结果的 next_page_token，并保持 comment_id 不变；不要使用一级评论或搜索的分页令牌。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "comment_id"
+        ],
+        "type": "object"
+      },
+      "description": "读取指定一级评论下的回复，按头条默认顺序分页；comment_id 取一级评论结果，续页保持该 ID，不要改用回复项自身的 ID。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_search_posts",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {
+            "description": "搜索词或关键词短语，例如 NBA、旅行攻略；不要传作品链接、用户主页链接或内容 ID。",
+            "minLength": 1,
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "首次留空；续页原样传入上一页的 next_page_token，并保持 keyword 不变。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword"
+        ],
+        "type": "object"
+      },
+      "description": "按关键词或短语查找今日头条公开内容，支持分页。不用于读取指定链接的详情或查找用户；不返回导航、百科、用户及视频聚合面板。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_post_detail_by_post_id",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "post_id": {
+            "description": "头条内容数字 ID，可取搜索结果 post_id；不要传链接。",
+            "pattern": "^[0-9]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id"
+        ],
+        "type": "object"
+      },
+      "description": "读取头条文章、视频或微头条详情，包含正文、图片、作者和互动数据，视频含播放信息；输入内容数字 ID，可接续搜索结果。有链接时使用 toutiao_get_post_detail_by_url。视频说明不是语音转写。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_post_detail_by_url",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "description": "头条内容链接或包含该链接的分享文案，支持 /article/ID/、/aID/、/video/ID/ 和 /w/ID/，可取搜索结果 post_url；不要传纯 ID。",
+            "pattern": "https?://",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "description": "通过头条内容链接或分享文案读取文章、视频或微头条详情；只有内容 ID 时使用 toutiao_get_post_detail_by_post_id。视频说明不是语音转写。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_post_comments_by_post_id",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "post_id": {
+            "description": "头条内容数字 ID，可取搜索结果 post_id；不要传链接。",
+            "pattern": "^[0-9]+$",
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "首次留空；续页原样传入同一内容上一页评论结果的 next_page_token；不要使用搜索结果的分页令牌。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id"
+        ],
+        "type": "object"
+      },
+      "description": "读取头条文章、视频或微头条的一级评论，按头条默认顺序返回，支持分页，不包含评论回复；输入内容数字 ID，支持接续搜索结果；有链接时使用 toutiao_get_post_comments_by_url。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "toutiao_get_post_comments_by_url",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "description": "头条内容链接或包含该链接的分享文案，支持 /article/ID/、/aID/、/video/ID/ 和 /w/ID/，可取搜索结果 post_url；不要传纯 ID。",
+            "pattern": "https?://",
+            "type": "string"
+          },
+          "page_token": {
+            "default": "",
+            "description": "首次留空；续页原样传入同一内容上一页评论结果的 next_page_token；不要使用搜索结果的分页令牌。",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "description": "通过头条内容链接或分享文案读取一级评论，按头条默认顺序返回，支持分页，不包含评论回复；只有内容 ID 时使用 toutiao_get_post_comments_by_post_id。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "socialdatax_get_points_balance",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "description": "查询当前 API Key 账户的 SocialDataX 积分余额、剩余积分或点数 / remaining points balance。需要充值时请访问 https://socialdatax.com/dashboard/billing。",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "tags": [
+    "toutiao",
+    "今日头条",
+    "news",
+    "comments",
+    "creator-data"
+  ]
+}

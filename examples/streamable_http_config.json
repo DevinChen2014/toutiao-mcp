@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "socialdatax-toutiao": {
+      "type": "streamable_http",
+      "url": "https://mcp.socialdatax.com/toutiao/mcp",
+      "headers": {
+        "Authorization": "Bearer <SOCIALDATAX_API_KEY>"
+      }
+    }
+  }
+}

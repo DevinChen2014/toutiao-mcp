@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "socialdatax-toutiao": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.socialdatax.com/toutiao/mcp",
+        "--header",
+        "Authorization: Bearer <SOCIALDATAX_API_KEY>"
+      ]
+    }
+  }
+}

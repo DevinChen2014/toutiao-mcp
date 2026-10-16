@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "socialdatax-toutiao": {
+      "url": "https://mcp.socialdatax.com/toutiao/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:SOCIALDATAX_API_KEY}"
+      }
+    }
+  }
+}
