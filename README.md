@@ -1,5 +1,7 @@
 # 今日头条 MCP | Toutiao MCP
 
+LobeHub 用户请使用 [LobeHub setup / 接入说明](LOBEHUB.md)，包含专属官网入口、认证和来源配置。
+
 SocialDataX / 社媒数据助手 provides a hosted, read-only MCP service for public Toutiao data. This repository contains connection metadata and client examples.
 
 ## Connection
